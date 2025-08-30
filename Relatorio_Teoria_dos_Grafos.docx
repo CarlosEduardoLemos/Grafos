@@ -1,0 +1,65 @@
+# Relatório Técnico – Teoria dos Grafos e Análise de Algoritmos
+
+### 1. Introdução
+
+A teoria dos grafos é uma área da matemática aplicada e da ciência da computação que estuda relações entre objetos por meio de vértices (nós) e arestas (ligações). Grafos são amplamente utilizados para modelar problemas de transporte, redes de computadores, logística e diversas outras áreas onde há a necessidade de encontrar caminhos, rotas ou conexões mais eficientes.
+
+Nesta atividade, foi desenvolvido um programa em Python capaz de representar um grafo que simula os pontos de entrega de uma empresa de transporte, calculando o menor caminho, custos associados e a melhor rota para atender todos os clientes, além de estimar o gasto monetário.
+
+---
+
+### 2. Arquitetura Proposta
+
+O software foi desenvolvido em Python utilizando as seguintes bibliotecas:
+
+* **NetworkX**: para modelagem, manipulação e análise de grafos.
+* **Matplotlib**: para a visualização gráfica dos vértices, arestas e pesos.
+
+#### Componentes do sistema:
+
+* Estruturação do grafo com vértices representando os pontos de entrega.
+* Inserção das arestas com os respectivos pesos, que correspondem aos custos de deslocamento (distância, velocidade e congestionamentos).
+* Utilização do algoritmo de Dijkstra para encontrar os menores caminhos.
+* Aplicação de uma aproximação para o Problema do Caixeiro Viajante (TSP), a fim de determinar a rota mais econômica para visitar todos os pontos.
+* Cálculo do custo total em reais considerando o valor monetário de R\$20,00 por unidade de custo.
+
+---
+
+### 3. Resultados
+
+#### 3.1 Grafo construído em Python
+
+Foi gerado o grafo com os vértices correspondentes aos pontos de entrega e as arestas ponderadas pelos custos de deslocamento.
+
+#### 3.2 Menor caminho entre Lago Norte e Lago Sul
+
+* Caminho: **Lago Norte → Lago Sul**
+* Custo: **8**
+
+#### 3.3 Custos do Lago Norte até todos os pontos
+
+* Lago Norte → Asa Norte: custo **11**
+* Lago Norte → Asa Sul: custo **15**
+* Lago Norte → Lago Sul: custo **8**
+* Lago Norte → Esplanada: custo **15**
+* Lago Norte → Vila Planalto: custo **5**
+
+#### 3.4 Caminho mais econômico para visitar todos os pontos (TSP aproximado)
+
+* Rota: **Asa Norte → Esplanada → Vila Planalto → Lago Norte → Lago Sul → Asa Sul → Esplanada → Asa Norte**
+* Custo total: **47**
+
+#### 3.5 Cálculo do gasto em reais
+
+* Saindo da Esplanada, visitando todos os pontos e retornando ao Lago Norte:
+
+  * Custo: **47**
+  * Valor: **R\$ 940,00**
+
+---
+
+### 4. Conclusão
+
+O desenvolvimento deste trabalho permitiu compreender de forma prática a aplicação da teoria dos grafos em problemas reais de transporte e logística. A utilização da linguagem Python e das bibliotecas NetworkX e Matplotlib proporcionou uma abordagem eficiente tanto na modelagem quanto na visualização do grafo.
+
+Entre as principais dificuldades enfrentadas, destacam-se a implementação do Problema do Caixeiro Viajante e o tratamento de caminhos aproximados, já que nem sempre há rotas diretas entre todos os vértices. No entanto, a atividade contribuiu significativamente para o aprendizado sobre algoritmos de caminhos mínimos, otimização de rotas e análise de custos em redes.
