@@ -67,6 +67,32 @@ menor_caminho = nx.dijkstra_path(G, source="Lago Norte", target="Lago Sul", weig
 custo_menor_caminho = nx.dijkstra_path_length(G, source="Lago Norte", target="Lago Sul", weight="weight")
 print(f"Menor caminho Lago Norte -> Lago Sul: {menor_caminho} com custo {custo_menor_caminho}")
 
+# === Nova tela: visualiza o grafo e destaca o menor caminho Lago Norte -> Lago Sul ===
+# caminho já calculado em `menor_caminho`
+path_edges = list(zip(menor_caminho, menor_caminho[1:]))
+
+plt.figure(figsize=(8, 6))
+# desenha grafo base
+nx.draw(
+    G, pos,
+    with_labels=True,
+    node_size=2000,
+    node_color="lightblue",
+    font_size=10,
+    font_weight="bold",
+    edge_color="gray"
+)
+# rótulos das arestas (pesos)
+nx.draw_networkx_edge_labels(G, pos, edge_labels=labels)
+
+# destaca arestas do caminho mínimo em vermelho e mais espessas
+nx.draw_networkx_edges(G, pos, edgelist=path_edges, width=4, edge_color="red")
+# destaca nós do caminho mínimo em vermelho
+nx.draw_networkx_nodes(G, pos, nodelist=menor_caminho, node_color="red", node_size=2000)
+
+plt.title("Grafo - Menor caminho: Lago Norte → Lago Sul (destacado em vermelho)")
+plt.show()
+
 """
 ------------------------------------------------------------
 5) Menores caminhos a partir de um nó para todos os demais
