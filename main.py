@@ -1,159 +1,148 @@
 import networkx as nx
 import matplotlib.pyplot as plt
+import os
+from datetime import datetime
+from typing import Dict, List, Tuple
 
-"""
-------------------------------------------------------------
-1) Definição dos pontos (vértices) do problema
-lista com os nomes dos locais de entrega (cada nome => um nó no grafo)
-"""
-locais_entrega = [
-    "Asa Norte", "Asa Sul", "Lago Sul", "Esplanada", "Lago Norte", "Vila Planalto"
-]
+# Diretório para salvar imagens (usa pasta "img" já existente no projeto)
+base_dir = os.path.dirname(__file__) if '__file__' in globals() else os.getcwd()
+img_dir = os.path.join(base_dir, "img")
+os.makedirs(img_dir, exist_ok=True)
 
-# Cria um grafo não direcionado (cada aresta representa ligação entre locais)
-G = nx.Graph()
-G.add_nodes_from(locais_entrega)  # adiciona os nós ao grafo
+def save_fig(name: str, dpi: int = 300) -> str:
+    """Salva a figura matplotlib atual em img/<name>_YYYYMMDD_HHMMSS.png"""
+    ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+    filename = f"{name}_{ts}.png"
+    path = os.path.join(img_dir, filename)
+    plt.savefig(path, bbox_inches='tight', dpi=dpi)
+    print(f"Figura salva: {path}")
+    return path
 
-"""
-------------------------------------------------------------
-2) Arestas com pesos (custos/distâncias)
-Cada tupla é (origem, destino, peso). Usamos add_weighted_edges_from para
-armazenar o peso na propriedade 'weight' da aresta.
-"""
-conexoes = [
-    ("Lago Sul", "Esplanada", 11),
-    ("Lago Sul", "Asa Sul", 5),
-    ("Lago Sul", "Vila Planalto", 14),
+def build_graph() -> nx.Graph:
+    """Cria e retorna o grafo com nós e arestas ponderadas."""
+    locais_entrega = [
+        "Asa Norte", "Asa Sul", "Lago Sul", "Esplanada", "Lago Norte", "Vila Planalto"
+    ]
+    conexoes = [
+        ("Lago Sul", "Esplanada", 11),
+        ("Lago Sul", "Asa Sul", 5),
+        ("Lago Sul", "Vila Planalto", 14),
+        ("Lago Norte", "Vila Planalto", 7),
+        ("Lago Norte", "Esplanada", 8),
+        ("Lago Norte", "Asa Norte", 12),
+        ("Vila Planalto", "Esplanada", 10),
+        ("Asa Norte", "Esplanada", 6),
+        ("Asa Norte", "Asa Sul", 12),
+        ("Asa Sul", "Esplanada", 5),
+    ]
+    G = nx.Graph()
+    G.add_nodes_from(locais_entrega)
+    G.add_weighted_edges_from(conexoes)
+    return G
 
-    ("Lago Norte", "Vila Planalto", 7),
-    ("Lago Norte", "Esplanada", 8),
-    ("Lago Norte", "Asa Norte", 12),
+def default_positions() -> Dict[str, Tuple[float, float]]:
+    """Posições manuais para reproduzir a figura fornecida."""
+    return {
+        "Asa Norte": (-1.0,  0.0),
+        "Asa Sul":   (-0.6,  0.9),
+        "Lago Sul":  ( 0.6,  0.9),
+        "Vila Planalto": ( 1.0,  0.0),
+        "Lago Norte": ( 0.0, -0.9),
+        "Esplanada":  ( 0.0,  0.15),
+    }
 
-    ("Vila Planalto", "Esplanada", 10),
+def draw_graph(G: nx.Graph, pos: Dict[str, Tuple[float, float]], title: str, filename: str):
+    """Desenha o grafo completo e salva a figura."""
+    plt.figure(figsize=(8, 6))
+    nx.draw_networkx_nodes(
+        G, pos,
+        node_size=2500,
+        node_color="white",
+        edgecolors="black",
+        linewidths=2
+    )
+    nx.draw_networkx_labels(G, pos, font_size=12, font_weight="bold")
+    nx.draw_networkx_edges(G, pos, edge_color="tab:blue", width=2)
+    labels = nx.get_edge_attributes(G, 'weight')
+    nx.draw_networkx_edge_labels(G, pos, edge_labels=labels, font_color="tab:blue", font_size=10)
+    plt.title(title, fontsize=14)
+    plt.figtext(0.5, 0.01, "Figura 1 - Grafo representando os pontos de entrega de Carlos", ha="center", fontsize=9, style="italic")
+    plt.axis('off')
+    plt.tight_layout()
+    save_fig(filename)
+    plt.show()
+    plt.close()
 
-    ("Asa Norte", "Esplanada", 6),
-    ("Asa Norte", "Asa Sul", 12),
+def highlight_shortest_path(G: nx.Graph, pos: Dict[str, Tuple[float, float]], path: List[str], title: str, filename: str):
+    """Desenha o grafo e destaca um caminho (lista de nós) em vermelho."""
+    labels = nx.get_edge_attributes(G, 'weight')
+    path_edges = list(zip(path, path[1:]))
+    plt.figure(figsize=(8, 6))
+    nx.draw_networkx_nodes(
+        G, pos,
+        node_size=2500,
+        node_color="white",
+        edgecolors="black",
+        linewidths=2
+    )
+    nx.draw_networkx_labels(G, pos, font_size=12, font_weight="bold")
+    nx.draw_networkx_edges(G, pos, edge_color="lightgray", width=2)
+    nx.draw_networkx_edge_labels(G, pos, edge_labels=labels, font_color="tab:blue", font_size=10)
+    nx.draw_networkx_edges(G, pos, edgelist=path_edges, width=4, edge_color="red")
+    nx.draw_networkx_nodes(G, pos, nodelist=path, node_color="red", edgecolors="black", node_size=2500, linewidths=2)
+    plt.title(title, fontsize=14)
+    plt.axis('off')
+    plt.tight_layout()
+    save_fig(filename)
+    plt.show()
+    plt.close()
 
-    ("Asa Sul", "Esplanada", 5),
-]
-G.add_weighted_edges_from(conexoes)
+def shortest_path_dijkstra(G: nx.Graph, source: str, target: str) -> Tuple[List[str], float]:
+    """Retorna (caminho, custo) usando Dijkstra considerando o peso 'weight'."""
+    caminho = nx.dijkstra_path(G, source=source, target=target, weight="weight")
+    custo = nx.dijkstra_path_length(G, source=source, target=target, weight="weight")
+    return caminho, custo
 
-"""
-------------------------------------------------------------
-3) Visualização do grafo
-- spring_layout: posicionamento automático dos nós (seed fixo para reprodutibilidade)
-- nx.draw: desenha nós e rótulos
-- nx.draw_networkx_edge_labels: mostra os pesos das arestas (custos/distâncias)
-"""
-# pos = nx.spring_layout(G, seed=42)  # layout determinístico
-# Substitui layout automático por posições manuais para reproduzir a figura fornecida
-pos = {
-    "Asa Norte": (-1.0,  0.0),
-    "Asa Sul":   (-0.6,  0.9),
-    "Lago Sul":  ( 0.6,  0.9),
-    "Vila Planalto": ( 1.0,  0.0),
-    "Lago Norte": ( 0.0, -0.9),
-    "Esplanada":  ( 0.0,  0.15),
-}
+def all_shortest_paths_from(G: nx.Graph, source: str) -> None:
+    """Imprime os caminhos mínimos a partir de `source` para todos os nós do grafo."""
+    print(f"\nCaminhos mínimos a partir de {source}:")
+    for destino in G.nodes:
+        caminho = nx.dijkstra_path(G, source=source, target=destino, weight="weight")
+        custo = nx.dijkstra_path_length(G, source=source, target=destino, weight="weight")
+        print(f"{source} -> {destino}: caminho {caminho}, custo {custo}")
 
-# Figura principal: grafo completo no estilo da imagem
-plt.figure(figsize=(8, 6))
-nx.draw_networkx_nodes(
-    G, pos,
-    node_size=2500,
-    node_color="white",
-    edgecolors="black",
-    linewidths=2
-)
-nx.draw_networkx_labels(
-    G, pos,
-    font_size=12,
-    font_weight="bold"
-)
-# arestas em azul claro como na imagem
-nx.draw_networkx_edges(G, pos, edge_color="tab:blue", width=2)
-# rótulos das arestas em azul
-labels = nx.get_edge_attributes(G, 'weight')
-nx.draw_networkx_edge_labels(G, pos, edge_labels=labels, font_color="tab:blue", font_size=10)
+def tsp_approx(G: nx.Graph, nodes: List[str] = None, cycle: bool = True) -> Tuple[List[str], float]:
+    """Retorna (rota, custo) aproximada do TSP. Se nodes for None usa todos os nós."""
+    if nodes is None:
+        nodes = list(G.nodes)
+    ciclo = nx.approximation.traveling_salesman_problem(G, nodes=nodes, weight="weight", cycle=cycle)
+    custo = sum(G[ciclo[i]][ciclo[i+1]]['weight'] for i in range(len(ciclo)-1))
+    return ciclo, custo
 
-# legenda / legenda inferior similar à figura
-plt.title("Grafo - Pontos de Entrega de Carlos", fontsize=14)
-plt.figtext(0.5, 0.01, "Figura 1 - Grafo representando os pontos de entrega de Carlos", ha="center", fontsize=9, style="italic")
-plt.axis('off')
-plt.tight_layout()
-plt.show()
+def main():
+    G = build_graph()
+    pos = default_positions()
 
-"""
-------------------------------------------------------------
-4) Menor caminho entre dois pontos (Dijkstra)
-nx.dijkstra_path retorna a sequência de nós do caminho mínimo considerando 'weight'
-nx.dijkstra_path_length retorna o custo total (soma dos pesos) do caminho
-"""
-menor_caminho = nx.dijkstra_path(G, source="Lago Norte", target="Lago Sul", weight="weight")
-custo_menor_caminho = nx.dijkstra_path_length(G, source="Lago Norte", target="Lago Sul", weight="weight")
-print(f"Menor caminho Lago Norte -> Lago Sul: {menor_caminho} com custo {custo_menor_caminho}")
+    # 1) Desenhar grafo completo
+    draw_graph(G, pos, "Grafo - Pontos de Entrega de Carlos", "grafo_completo")
 
-# === Nova tela: visualiza o grafo e destaca o menor caminho Lago Norte -> Lago Sul ===
-# caminho já calculado em `menor_caminho`
-path_edges = list(zip(menor_caminho, menor_caminho[1:]))
+    # 2) Menor caminho entre dois pontos (exemplo Lago Norte -> Lago Sul)
+    origem, destino = "Lago Norte", "Lago Sul"
+    caminho, custo = shortest_path_dijkstra(G, origem, destino)
+    print(f"Menor caminho {origem} -> {destino}: {caminho} com custo {custo}")
+    highlight_shortest_path(G, pos, caminho, f"Grafo - Menor caminho: {origem} → {destino} (destacado em vermelho)", "grafo_menor_caminho")
 
-plt.figure(figsize=(8, 6))
-# desenha grafo base (arestas mais claras)
-nx.draw_networkx_nodes(
-    G, pos,
-    node_size=2500,
-    node_color="white",
-    edgecolors="black",
-    linewidths=2
-)
-nx.draw_networkx_labels(G, pos, font_size=12, font_weight="bold")
-nx.draw_networkx_edges(G, pos, edge_color="lightgray", width=2)
+    # 3) Todos os menores caminhos a partir de Lago Norte
+    all_shortest_paths_from(G, "Lago Norte")
 
-# rótulos das arestas em azul (mantém leitura)
-nx.draw_networkx_edge_labels(G, pos, edge_labels=labels, font_color="tab:blue", font_size=10)
+    # 4) TSP (aproximação) para todos os nós
+    tsp_ciclo, tsp_custo = tsp_approx(G, nodes=list(G.nodes), cycle=True)
+    print(f"\nCaminho mais econômico (TSP): {tsp_ciclo} com custo {tsp_custo}")
 
-# destaca arestas do caminho mínimo em vermelho e mais espessas
-nx.draw_networkx_edges(G, pos, edgelist=path_edges, width=4, edge_color="red")
-# destaca nós do caminho mínimo em vermelho (com borda preta)
-nx.draw_networkx_nodes(G, pos, nodelist=menor_caminho, node_color="red", edgecolors="black", node_size=2500, linewidths=2)
+    # 5) Exemplo de custo monetário saindo da Esplanada
+    tsp_espl, tsp_espl_custo = tsp_approx(G, nodes=list(G.nodes), cycle=True)
+    valor_total = tsp_espl_custo * 20
+    print(f"\nSaindo da Esplanada, custo total = {tsp_espl_custo}, valor em reais = R${valor_total:.2f}")
 
-plt.title("Grafo - Menor caminho: Lago Norte → Lago Sul (destacado em vermelho)", fontsize=14)
-plt.axis('off')
-plt.tight_layout()
-plt.show()
-
-"""
-------------------------------------------------------------
-5) Menores caminhos a partir de um nó para todos os demais
-Itera por cada destino e calcula caminho mínimo e custo a partir de "Lago Norte"
-"""
-print("\nCaminhos mínimos a partir do Lago Norte:")
-for destino in locais_entrega:
-    caminho = nx.dijkstra_path(G, source="Lago Norte", target=destino, weight="weight")
-    custo = nx.dijkstra_path_length(G, source="Lago Norte", target=destino, weight="weight")
-    # Exibe o caminho (sequência de nós) e o custo total (soma dos pesos)
-    print(f"Lago Norte -> {destino}: caminho {caminho}, custo {custo}")
-
-"""
-------------------------------------------------------------
-6) Aproximação do Caixeiro Viajante (TSP)
-nx.approximation.traveling_salesman_problem retorna uma rota aproximada que visita
-todos os nós. Parâmetro cycle=True pede que retorne um ciclo (volta ao ponto inicial).
-Note: é uma heurística / aproximação, não garante solução ótima exata para todos os grafos.
-"""
-tsp_ciclo = nx.approximation.traveling_salesman_problem(G, weight="weight", cycle=True)
-# Calcula custo somando os pesos das arestas sucessivas do ciclo retornado
-tsp_custo = sum(G[tsp_ciclo[i]][tsp_ciclo[i+1]]['weight'] for i in range(len(tsp_ciclo)-1))
-print(f"\nCaminho mais econômico (TSP): {tsp_ciclo} com custo {tsp_custo}")
-
-"""
-------------------------------------------------------------
-7) Exemplo de cálculo do custo monetário
-Supondo R$20 por unidade de distância/custo: multiplica-se o custo total do TSP por 20.
-Ao chamar traveling_salesman_problem com nodes=locais_entrega garantimos que a rota
-considere exatamente o conjunto de nós desejado.
-"""
-tsp_esplanada = nx.approximation.traveling_salesman_problem(G, nodes=locais_entrega, cycle=True)
-tsp_esplanada_custo = sum(G[tsp_esplanada[i]][tsp_esplanada[i+1]]['weight'] for i in range(len(tsp_esplanada)-1))
-valor_total = tsp_esplanada_custo * 20  # valor em reais (R$20 por unidade de custo)
-print(f"\nSaindo da Esplanada, custo total = {tsp_esplanada_custo}, valor em reais = R${valor_total:.2f}")
+if __name__ == "__main__":
+    main()
