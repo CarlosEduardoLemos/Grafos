@@ -4,10 +4,22 @@ import os
 from datetime import datetime
 from typing import Dict, List, Tuple
 
-# Diretório para salvar imagens (usa pasta "img" já existente no projeto)
+# Diretório base do arquivo
 base_dir = os.path.dirname(__file__) if '__file__' in globals() else os.getcwd()
-img_dir = os.path.join(base_dir, "img")
-os.makedirs(img_dir, exist_ok=True)
+
+# Criar pastas para salvar imagens: prioriza "IMG" (maiúscula), mas também garante "img" por compatibilidade
+img_dir_upper = os.path.join(base_dir, "IMG")
+img_dir_lower = os.path.join(base_dir, "img")
+
+# Se uma das pastas já existir, use-a; caso contrário crie "IMG" e também crie "img" para compatibilidade
+if os.path.isdir(img_dir_upper):
+    img_dir = img_dir_upper
+elif os.path.isdir(img_dir_lower):
+    img_dir = img_dir_lower
+else:
+    img_dir = img_dir_upper
+    os.makedirs(img_dir_upper, exist_ok=True)
+    os.makedirs(img_dir_lower, exist_ok=True)
 
 def save_fig(name: str, dpi: int = 300) -> str:
     """Salva a figura matplotlib atual em img/<name>_YYYYMMDD_HHMMSS.png"""
