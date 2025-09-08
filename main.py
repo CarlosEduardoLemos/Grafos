@@ -147,12 +147,14 @@ def run_all(img_dir: str, args: argparse.Namespace):
     else:
         all_shortest_paths_from(G, "Lago Norte")
 
-    # TSP
-    if args.tsp:
+    # Sempre calcula aproximação TSP e imprime valor em reais
+    try:
         tsp_ciclo, tsp_custo = tsp_approx(G, nodes=list(G.nodes), cycle=True)
         print(f"\nCaminho mais econômico (TSP): {tsp_ciclo} com custo {tsp_custo}")
         valor_total = tsp_custo * 20
-        print(f"\nValor em reais (multiplicador 20) = R${valor_total:.2f}")
+        print(f"Valor em reais (multiplicador 20) = R${valor_total:.2f}")
+    except Exception as e:
+        print(f"Falha ao calcular TSP: {e}")
 
 def main(argv: List[str] = None):
     base_dir = os.path.dirname(__file__) if '__file__' in globals() else os.getcwd()
