@@ -21,16 +21,20 @@ Cada tupla é (origem, destino, peso). Usamos add_weighted_edges_from para
 armazenar o peso na propriedade 'weight' da aresta.
 """
 conexoes = [
-    ("Asa Norte", "Asa Sul", 12),
+    ("Lago Sul", "Esplanada", 11),
+    ("Lago Sul", "Asa Sul", 5),
+    ("Lago Sul", "Vila Planalto", 14),
+
+    ("Lago Norte", "Vila Planalto", 7),
+    ("Lago Norte", "Esplanada", 8),
+    ("Lago Norte", "Asa Norte", 12),
+
+    ("Vila Planalto", "Esplanada", 10),
+
     ("Asa Norte", "Esplanada", 6),
-    ("Asa Norte", "Lago Norte", 11),
+    ("Asa Norte", "Asa Sul", 12),
+
     ("Asa Sul", "Esplanada", 5),
-    ("Asa Sul", "Lago Sul", 7),
-    ("Esplanada", "Lago Sul", 14),
-    ("Esplanada", "Vila Planalto", 10),
-    ("Lago Norte", "Vila Planalto", 5),
-    ("Lago Norte", "Lago Sul", 8),
-    ("Lago Sul", "Vila Planalto", 12),
 ]
 G.add_weighted_edges_from(conexoes)
 
@@ -41,20 +45,42 @@ G.add_weighted_edges_from(conexoes)
 - nx.draw: desenha nós e rótulos
 - nx.draw_networkx_edge_labels: mostra os pesos das arestas (custos/distâncias)
 """
-pos = nx.spring_layout(G, seed=42)  # layout determinístico
+# pos = nx.spring_layout(G, seed=42)  # layout determinístico
+# Substitui layout automático por posições manuais para reproduzir a figura fornecida
+pos = {
+    "Asa Norte": (-1.0,  0.0),
+    "Asa Sul":   (-0.6,  0.9),
+    "Lago Sul":  ( 0.6,  0.9),
+    "Vila Planalto": ( 1.0,  0.0),
+    "Lago Norte": ( 0.0, -0.9),
+    "Esplanada":  ( 0.0,  0.15),
+}
+
+# Figura principal: grafo completo no estilo da imagem
 plt.figure(figsize=(8, 6))
-nx.draw(
+nx.draw_networkx_nodes(
     G, pos,
-    with_labels=True,
-    node_size=2000,
-    node_color="lightblue",
-    font_size=10,
+    node_size=2500,
+    node_color="white",
+    edgecolors="black",
+    linewidths=2
+)
+nx.draw_networkx_labels(
+    G, pos,
+    font_size=12,
     font_weight="bold"
 )
-# Obtém os pesos para rotular as arestas
-labels = nx.get_edge_attributes(G, 'weight')  # dicionário {(u,v): peso}
-nx.draw_networkx_edge_labels(G, pos, edge_labels=labels)
-plt.title("Grafo - Pontos de Entrega de Carlos")
+# arestas em azul claro como na imagem
+nx.draw_networkx_edges(G, pos, edge_color="tab:blue", width=2)
+# rótulos das arestas em azul
+labels = nx.get_edge_attributes(G, 'weight')
+nx.draw_networkx_edge_labels(G, pos, edge_labels=labels, font_color="tab:blue", font_size=10)
+
+# legenda / legenda inferior similar à figura
+plt.title("Grafo - Pontos de Entrega de Carlos", fontsize=14)
+plt.figtext(0.5, 0.01, "Figura 1 - Grafo representando os pontos de entrega de Carlos", ha="center", fontsize=9, style="italic")
+plt.axis('off')
+plt.tight_layout()
 plt.show()
 
 """
@@ -72,25 +98,28 @@ print(f"Menor caminho Lago Norte -> Lago Sul: {menor_caminho} com custo {custo_m
 path_edges = list(zip(menor_caminho, menor_caminho[1:]))
 
 plt.figure(figsize=(8, 6))
-# desenha grafo base
-nx.draw(
+# desenha grafo base (arestas mais claras)
+nx.draw_networkx_nodes(
     G, pos,
-    with_labels=True,
-    node_size=2000,
-    node_color="lightblue",
-    font_size=10,
-    font_weight="bold",
-    edge_color="gray"
+    node_size=2500,
+    node_color="white",
+    edgecolors="black",
+    linewidths=2
 )
-# rótulos das arestas (pesos)
-nx.draw_networkx_edge_labels(G, pos, edge_labels=labels)
+nx.draw_networkx_labels(G, pos, font_size=12, font_weight="bold")
+nx.draw_networkx_edges(G, pos, edge_color="lightgray", width=2)
+
+# rótulos das arestas em azul (mantém leitura)
+nx.draw_networkx_edge_labels(G, pos, edge_labels=labels, font_color="tab:blue", font_size=10)
 
 # destaca arestas do caminho mínimo em vermelho e mais espessas
 nx.draw_networkx_edges(G, pos, edgelist=path_edges, width=4, edge_color="red")
-# destaca nós do caminho mínimo em vermelho
-nx.draw_networkx_nodes(G, pos, nodelist=menor_caminho, node_color="red", node_size=2000)
+# destaca nós do caminho mínimo em vermelho (com borda preta)
+nx.draw_networkx_nodes(G, pos, nodelist=menor_caminho, node_color="red", edgecolors="black", node_size=2500, linewidths=2)
 
-plt.title("Grafo - Menor caminho: Lago Norte → Lago Sul (destacado em vermelho)")
+plt.title("Grafo - Menor caminho: Lago Norte → Lago Sul (destacado em vermelho)", fontsize=14)
+plt.axis('off')
+plt.tight_layout()
 plt.show()
 
 """
