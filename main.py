@@ -202,4 +202,3 @@ def main(argv: List[str] = None) -> int:
 if __name__ == "__main__":
     sys.exit(main(sys.argv[1:]))
 
-# Sugestão: crie um arquivo tests/test_main.py para testes unitários das funções principais.
