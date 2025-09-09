@@ -9,21 +9,16 @@ import logging
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 
+MULTIPLIER_REAIS = 20  # Valor multiplicador para cálculo em reais
+
 def create_output_dirs(base_dir: str) -> str:
-    """Prepare IMG/img directory and return path to use."""
-    img_dir_upper = os.path.join(base_dir, "IMG")
-    img_dir_lower = os.path.join(base_dir, "img")
-    if os.path.isdir(img_dir_upper):
-        img_dir = img_dir_upper
-    elif os.path.isdir(img_dir_lower):
-        img_dir = img_dir_lower
-    else:
-        img_dir = img_dir_upper
-        os.makedirs(img_dir_upper, exist_ok=True)
-        os.makedirs(img_dir_lower, exist_ok=True)
+    """Cria diretório IMG para salvar imagens."""
+    img_dir = os.path.join(base_dir, "IMG")
+    os.makedirs(img_dir, exist_ok=True)
     return img_dir
 
 def save_fig(name: str, img_dir: str, dpi: int = 300) -> str:
+    """Salva a figura atual do matplotlib no diretório especificado."""
     ts = datetime.now().strftime("%Y%m%d_%H%M%S")
     filename = f"{name}_{ts}.png"
     path = os.path.join(img_dir, filename)
@@ -32,6 +27,7 @@ def save_fig(name: str, img_dir: str, dpi: int = 300) -> str:
     return path
 
 def build_graph() -> nx.Graph:
+    """Constrói o grafo dos pontos de entrega e suas conexões."""
     delivery_points = [
         "Asa Norte", "Asa Sul", "Lago Sul", "Esplanada", "Lago Norte", "Vila Planalto"
     ]
@@ -53,6 +49,7 @@ def build_graph() -> nx.Graph:
     return G
 
 def default_positions() -> Dict[str, Tuple[float, float]]:
+    """Retorna posições fixas para os nós do grafo."""
     return {
         "Asa Norte": (-1.0,  0.0),
         "Asa Sul": (-0.6,  0.9),
@@ -62,7 +59,8 @@ def default_positions() -> Dict[str, Tuple[float, float]]:
         "Esplanada":  ( 0.0,  0.15),
     }
 
-def draw_graph(G: nx.Graph, pos: Dict[str, Tuple[float, float]], title: str, filename: str, img_dir: str):
+def draw_graph(G: nx.Graph, pos: Dict[str, Tuple[float, float]], title: str, filename: str, img_dir: str, show: bool = True):
+    """Desenha o grafo e salva a imagem. Mostra na tela se show=True."""
     plt.figure(figsize=(8, 6))
     nx.draw_networkx_nodes(G, pos, node_size=2500, node_color="white", edgecolors="black", linewidths=2)
     nx.draw_networkx_labels(G, pos, font_size=12, font_weight="bold")
@@ -74,10 +72,12 @@ def draw_graph(G: nx.Graph, pos: Dict[str, Tuple[float, float]], title: str, fil
     plt.axis('off')
     plt.tight_layout()
     save_fig(filename, img_dir)
-    plt.show()
+    if show:
+        plt.show()
     plt.close()
 
-def highlight_shortest_path(G: nx.Graph, pos: Dict[str, Tuple[float, float]], path: List[str], title: str, filename: str, img_dir: str):
+def highlight_shortest_path(G: nx.Graph, pos: Dict[str, Tuple[float, float]], path: List[str], title: str, filename: str, img_dir: str, show: bool = True):
+    """Desenha o grafo destacando o caminho mais curto."""
     labels = nx.get_edge_attributes(G, 'weight')
     path_edges = list(zip(path, path[1:]))
     plt.figure(figsize=(8, 6))
@@ -91,10 +91,12 @@ def highlight_shortest_path(G: nx.Graph, pos: Dict[str, Tuple[float, float]], pa
     plt.axis('off')
     plt.tight_layout()
     save_fig(filename, img_dir)
-    plt.show()
+    if show:
+        plt.show()
     plt.close()
 
 def validate_nodes(G: nx.Graph, nodes: List[str]) -> bool:
+    """Valida se os nós existem no grafo."""
     missing = [node for node in nodes if node not in G.nodes]
     if missing:
         logging.error(f"Node(s) not found in graph: {missing}")
@@ -102,11 +104,13 @@ def validate_nodes(G: nx.Graph, nodes: List[str]) -> bool:
     return True
 
 def shortest_path_dijkstra(G: nx.Graph, source: str, target: str) -> Tuple[List[str], float]:
+    """Calcula o caminho mais curto entre dois nós usando Dijkstra."""
     path = nx.dijkstra_path(G, source=source, target=target, weight="weight")
     cost = nx.dijkstra_path_length(G, source=source, target=target, weight="weight")
     return path, cost
 
 def all_shortest_paths_from(G: nx.Graph, source: str) -> None:
+    """Exibe todos os caminhos mais curtos a partir de um nó."""
     logging.info(f"\nShortest paths from {source}:")
     for target in G.nodes:
         path = nx.dijkstra_path(G, source=source, target=target, weight="weight")
@@ -114,6 +118,7 @@ def all_shortest_paths_from(G: nx.Graph, source: str) -> None:
         logging.info(f"{source} -> {target}: path {path}, cost {cost}")
 
 def tsp_approx(G: nx.Graph, nodes: Optional[List[str]] = None, cycle: bool = True) -> Tuple[List[str], float]:
+    """Calcula uma solução aproximada para o TSP."""
     if nodes is None:
         nodes = list(G.nodes)
     tsp_cycle = nx.approximation.traveling_salesman_problem(G, nodes=nodes, weight="weight", cycle=cycle)
@@ -121,65 +126,80 @@ def tsp_approx(G: nx.Graph, nodes: Optional[List[str]] = None, cycle: bool = Tru
     return tsp_cycle, cost
 
 def parse_args(argv: List[str]) -> argparse.Namespace:
+    """Processa os argumentos da linha de comando."""
     p = argparse.ArgumentParser(description="Delivery points graph analysis")
     p.add_argument("--no-draw", action="store_true", help="Do not draw or save figures")
     p.add_argument("--shortest", nargs=2, metavar=("SOURCE","TARGET"), help="Calculate and highlight shortest path")
     p.add_argument("--all-shortest-from", metavar="SOURCE", help="Print all shortest paths from SOURCE")
     p.add_argument("--tsp", action="store_true", help="Run TSP approximation")
     p.add_argument("--start", metavar="NODE", help="Optional start node for TSP/reports")
+    p.add_argument("--show", action="store_true", help="Show figures interactively")
     return p.parse_args(argv)
 
-def run_all(img_dir: str, args: argparse.Namespace):
+def run_all(img_dir: str, args: argparse.Namespace) -> int:
+    """Executa todas as análises e visualizações. Retorna código de erro."""
     G = build_graph()
     pos = default_positions()
+    show_figs = args.show and not args.no_draw
+
+    # Validação dos argumentos
+    if args.shortest and not validate_nodes(G, args.shortest):
+        return 1
+    if args.all_shortest_from and not validate_nodes(G, [args.all_shortest_from]):
+        return 1
+    if args.start and not validate_nodes(G, [args.start]):
+        return 1
 
     if not args.no_draw:
-        draw_graph(G, pos, "Graph - Carlos's Delivery Points", "full_graph", img_dir)
+        draw_graph(G, pos, "Graph - Carlos's Delivery Points", "full_graph", img_dir, show=show_figs)
 
-    # Shortest path example (default)
+    # Shortest path
     if args.shortest:
         source, target = args.shortest
-        if not validate_nodes(G, [source, target]):
-            return
         path, cost = shortest_path_dijkstra(G, source, target)
         logging.info(f"Shortest path {source} -> {target}: {path} with cost {cost}")
         if not args.no_draw:
-            highlight_shortest_path(G, pos, path, f"Graph - Shortest path: {source} → {target} (highlighted in red)", "shortest_path_graph", img_dir)
+            highlight_shortest_path(G, pos, path, f"Graph - Shortest path: {source} → {target} (highlighted in red)", "shortest_path_graph", img_dir, show=show_figs)
     else:
-        # Default example
         source, target = "Lago Norte", "Lago Sul"
         path, cost = shortest_path_dijkstra(G, source, target)
         logging.info(f"Shortest path {source} -> {target}: {path} with cost {cost}")
         if not args.no_draw:
-            highlight_shortest_path(G, pos, path, f"Graph - Shortest path: {source} → {target} (highlighted in red)", "shortest_path_graph", img_dir)
+            highlight_shortest_path(G, pos, path, f"Graph - Shortest path: {source} → {target} (highlighted in red)", "shortest_path_graph", img_dir, show=show_figs)
 
     # All shortest paths
     if args.all_shortest_from:
-        if not validate_nodes(G, [args.all_shortest_from]):
-            return
         all_shortest_paths_from(G, args.all_shortest_from)
     else:
         all_shortest_paths_from(G, "Lago Norte")
 
-    # Always calculate TSP approximation and print value in reais
+    # TSP
     try:
         tsp_cycle, tsp_cost = tsp_approx(G, nodes=list(G.nodes), cycle=True)
         logging.info(f"\nMost economical route (TSP): {tsp_cycle} with cost {tsp_cost}")
-        total_value = tsp_cost * 20
-        logging.info(f"Value in reais (multiplier 20) = R${total_value:.2f}")
+        total_value = tsp_cost * MULTIPLIER_REAIS
+        logging.info(f"Value in reais (multiplier {MULTIPLIER_REAIS}) = R${total_value:.2f}")
     except Exception as e:
         logging.error(f"Failed to calculate TSP: {e}")
+        return 2
 
-def main(argv: List[str] = None):
+    return 0
+
+def main(argv: List[str] = None) -> int:
+    """Função principal. Retorna código de erro."""
     base_dir = os.path.dirname(__file__) if '__file__' in globals() else os.getcwd()
     img_dir = create_output_dirs(base_dir)
     args = parse_args([] if argv is None else argv)
     try:
-        run_all(img_dir, args)
+        return run_all(img_dir, args)
     except nx.NetworkXNoPath as e:
         logging.error(f"Error: path not found - {e}")
+        return 3
     except Exception as e:
         logging.error(f"Unexpected error: {e}")
+        return 4
 
 if __name__ == "__main__":
-    main(sys.argv[1:])
+    sys.exit(main(sys.argv[1:]))
+
+# Sugestão: crie um arquivo tests/test_main.py para testes unitários das funções principais.
