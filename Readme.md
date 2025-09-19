@@ -60,6 +60,33 @@ O script aceita diversos argumentos para personalizar a execução:
 | `--tsp`                  | Executa aproximação do Caixeiro Viajante                         |
 | `--start NODE`           | Define nó inicial para TSP/relatórios                            |
 
+### Exemplos de saída esperada
+
+#### `--shortest SRC DEST`
+```
+INFO: Shortest path Lago Norte -> Lago Sul: ['Lago Norte', 'Esplanada', 'Asa Sul', 'Lago Sul'] with cost 18
+```
+
+#### `--all-shortest-from SRC`
+```
+INFO: Shortest paths from Lago Norte:
+INFO: Lago Norte -> Asa Norte: path ['Lago Norte', 'Asa Norte'], cost 12
+INFO: Lago Norte -> Asa Sul: path ['Lago Norte', 'Esplanada', 'Asa Sul'], cost 13
+... (demais caminhos)
+```
+
+#### `--tsp`
+```
+INFO: Most economical route (TSP): ['Lago Norte', 'Vila Planalto', ...] with cost 54
+INFO: Value in reais (multiplier 20) = R$1080.00
+```
+
+#### `--no-draw`
+Nenhuma imagem será gerada ou exibida, apenas os resultados no console.
+
+#### `--show`
+As figuras dos grafos serão exibidas interativamente na tela, além de serem salvas em IMG/.
+
 **Exemplo:**
 ```bash
 python main.py --shortest "Lago Norte" "Lago Sul" --show
