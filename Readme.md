@@ -1,32 +1,33 @@
+
 # 📦 Grafos: Pontos de Entrega
 
-Este repositório contém um exemplo em **Python** que modela um pequeno grafo rodoviário (pontos de entrega) e demonstra operações comuns em grafos:
+Este repositório apresenta um exemplo em **Python** para modelagem e análise de um grafo rodoviário de pontos de entrega, incluindo visualização, cálculo de rotas e aproximação do Caixeiro Viajante.
 
-- ✅ Visualização do grafo com pesos (distâncias/custos)  
-- ✅ Cálculo do menor caminho entre dois pontos (**Algoritmo de Dijkstra**)  
-- ✅ Listagem dos menores caminhos a partir de um nó para todos os demais  
-- ✅ Aproximação do problema do **Caixeiro Viajante (TSP)**  
-- ✅ Cálculo de custo monetário associado a uma rota (ex.: R\$ por unidade de distância)  
+## Funcionalidades
 
-O exemplo está no arquivo **`main.py`** e foi feito para reproduzir a figura fornecida no material (posições dos nós foram definidas manualmente para coincidir com a imagem).
+- Visualização do grafo com pesos (distâncias/custos)
+- Cálculo do menor caminho entre dois pontos (**Dijkstra**)
+- Listagem dos menores caminhos a partir de um nó
+- Aproximação do problema do **Caixeiro Viajante (TSP)**
+- Cálculo de custo monetário associado à rota (ex.: R$ por unidade de distância)
+- Geração automática de imagens dos grafos no diretório `IMG`
+- Saída detalhada via **logging** (mensagens informativas e erros)
+
+O código principal está em **`main.py`**. As posições dos nós são fixas para coincidir com a imagem do material.
 
 ---
 
 ## 🔧 Pré-requisitos
 
-- **Python** 3.8+ (testado em 3.8 — deve funcionar até 3.11)
+- **Python** 3.8 ou superior (testado até 3.11)
 - **pip**
 
-### Dependências
-
-Instale com:
+### Instalação das dependências
 
 ```bash
 pip install networkx matplotlib
 ```
-
-Ou crie um `requirements.txt` e instale com:
-
+Ou:
 ```bash
 pip install -r requirements.txt
 ```
@@ -35,76 +36,95 @@ pip install -r requirements.txt
 
 ## ▶️ Como executar
 
-No terminal, estando na pasta do projeto:
+No terminal, na pasta do projeto:
 
 ```bash
 python main.py
 ```
 
-> **Observação:** O script abre janelas com gráficos (`plt.show()`).  
-> Em ambientes sem interface gráfica (headless), comente as chamadas `plt.show()` e use `plt.savefig(...)` ou configure um backend apropriado.
+Por padrão, o script:
+- Gera e salva imagens dos grafos em `IMG/`
+- Mostra os gráficos na tela (se possível)
+- Exibe no console os caminhos mínimos e rota TSP
+
+### Argumentos de linha de comando
+
+O script aceita diversos argumentos para personalizar a execução:
+
+| Argumento                | Descrição                                                        |
+|--------------------------|------------------------------------------------------------------|
+| `--no-draw`              | Não desenha nem salva figuras                                    |
+| `--show`                 | Mostra figuras interativamente                                   |
+| `--shortest SRC DEST`    | Calcula e destaca o menor caminho entre SRC e DEST               |
+| `--all-shortest-from SRC`| Lista todos os menores caminhos a partir de SRC                  |
+| `--tsp`                  | Executa aproximação do Caixeiro Viajante                         |
+| `--start NODE`           | Define nó inicial para TSP/relatórios                            |
+
+**Exemplo:**
+```bash
+python main.py --shortest "Lago Norte" "Lago Sul" --show
+```
+
+---
+
+## 🖼️ Geração de Imagens
+
+As imagens dos grafos são salvas automaticamente no diretório `IMG/` com timestamp no nome. Para desativar, use `--no-draw`.
+
+---
+
+## 🖥️ Uso em ambientes sem interface gráfica
+
+Se estiver em ambiente **headless** (sem GUI), comente as linhas `plt.show()` em `main.py` ou utilize apenas a geração de arquivos (`plt.savefig`).
 
 ---
 
 ## 📂 Estrutura do código (`main.py`)
 
-O script está organizado em blocos comentados:
-
-1. **Definição dos pontos (vértices)**  
-   Lista `locais_entrega` com nomes dos nós:  
-   `Asa Norte, Asa Sul, Lago Sul, Esplanada, Lago Norte, Vila Planalto`
-
-2. **Arestas com pesos**  
-   Lista `conexoes` com tuplas `(origem, destino, peso)`.  
-   Exemplo:  
-   ```
-   Lago Sul — Esplanada : 11
-   Lago Sul — Asa Sul : 5
-   Lago Norte — Esplanada : 8
-   ...
-   ```
-
-3. **Visualização do grafo**  
-   Usa `matplotlib` + `networkx` para desenhar o grafo com posições fixas.
-
-4. **Menor caminho entre dois pontos (Dijkstra)**  
-   Exemplo: menor caminho entre `"Lago Norte"` e `"Lago Sul"`  
-   Saída esperada:  
-   ```
-   Menor caminho Lago Norte -> Lago Sul: ['Lago Norte', 'Esplanada', 'Asa Sul', 'Lago Sul'] com custo 18
-   ```
-
-5. **Menores caminhos a partir de um nó**  
-   Itera sobre todos os destinos a partir de `"Lago Norte"`.
-
-6. **Aproximação do Caixeiro Viajante (TSP)**  
-   Usa `networkx.approximation.traveling_salesman_problem`.
-
-7. **Cálculo de custo monetário**  
-   Exemplo: R\$20 por unidade de distância.
+- **Definição dos pontos (vértices):**
+   Lista `delivery_points` com nomes dos nós: `Asa Norte, Asa Sul, Lago Sul, Esplanada, Lago Norte, Vila Planalto`
+- **Arestas com pesos:**
+   Lista `connections` com tuplas `(origem, destino, peso)`
+- **Visualização do grafo:**
+   Funções para desenhar e salvar imagens
+- **Menor caminho (Dijkstra):**
+   Função para calcular e destacar o menor caminho
+- **Menores caminhos a partir de um nó:**
+   Função para listar todos os caminhos mínimos
+- **Aproximação do TSP:**
+   Função para calcular rota aproximada
+- **Cálculo de custo monetário:**
+   Multiplicador configurável (`MULTIPLIER_REAIS`)
+- **Logs e tratamento de erros:**
+   Mensagens informativas e erros via `logging`
 
 ---
 
 ## ✅ Exemplo de saída no console
 
 ```
-Menor caminho Lago Norte -> Lago Sul: ['Lago Norte', 'Esplanada', 'Asa Sul', 'Lago Sul'] com custo 18
+INFO: Shortest path Lago Norte -> Lago Sul: ['Lago Norte', 'Esplanada', 'Asa Sul', 'Lago Sul'] with cost 18
 
-Caminhos mínimos a partir do Lago Norte:
-Lago Norte -> Asa Norte: ['Lago Norte', 'Asa Norte'], custo 12
-Lago Norte -> Asa Sul: ['Lago Norte', 'Esplanada', 'Asa Sul'], custo 13
+INFO: Shortest paths from Lago Norte:
+INFO: Lago Norte -> Asa Norte: path ['Lago Norte', 'Asa Norte'], cost 12
+INFO: Lago Norte -> Asa Sul: path ['Lago Norte', 'Esplanada', 'Asa Sul'], cost 13
 ...
+
+INFO: Most economical route (TSP): ['Lago Norte', 'Vila Planalto', ...] with cost 54
+INFO: Value in reais (multiplier 20) = R$1080.00
 ```
+
+---
 
 ## 📜 Licença e Autor
 
-- **Autor:** Carlos Lemos  
-- **Licença:** MIT (sinta-se à vontade para adaptar)  
+- **Autor:** Carlos Lemos
+- **Licença:** MIT
 
 ---
 
 ## 🤝 Contribuição
 
-Abra **issues** ou **pull requests** com sugestões, correções ou melhorias.
+Sugestões, correções ou melhorias são bem-vindas via **issues** ou **pull requests**.
 
 ---
